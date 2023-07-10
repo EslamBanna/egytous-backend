@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'image',
+        'reset_code'
     ];
 
     /**
@@ -41,4 +44,14 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function getImageAttribute($value)
+    {
+        $actual_link = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/';
+        return ($value == null ? '' : $actual_link . 'images/users/' . $value);
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        return ($value == null ? '' : $value);
+    }
 }
