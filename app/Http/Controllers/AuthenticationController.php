@@ -121,7 +121,9 @@ class AuthenticationController extends Controller
             if (!$user) {
                 return $this->returnError(202, 'this code is not exist');
             }
-            $user->update(['password' => Hash::make($request->password)]);
+            $user->update(['password' => Hash::make($request->password),
+            'reset_code' => null
+        ]);
             return $this->returnSuccessMessage('success');
         }catch (\Exception $e) {
             return $this->returnError(201, $e->getMessage());

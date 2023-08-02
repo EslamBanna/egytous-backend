@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\StoryController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,5 +29,13 @@ Route::post('/reset-password', [AuthenticationController::class, 'resetPassword'
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/me', [AuthenticationController::class, 'me']);
+    Route::get('/active-people', [UserController::class, 'activePeople']);
+    ###############  posts ###############################
+    Route::post('/add-post', [PostController::class, 'addPost']);
+    Route::get('/get-posts', [PostController::class, 'getPost']);
+
+    ######################################################
+    Route::post('/add-story', [StoryController::class, 'addStory']);
+    Route::get('/get-stories', [StoryController::class, 'getStories']);
     Route::get('/logout', [AuthenticationController::class, 'logout']);
 });
