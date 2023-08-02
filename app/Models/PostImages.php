@@ -12,6 +12,7 @@ class PostImages extends Model
     protected $fillable = [
         'post_id',
         'image',
+        'alt'
     ];
 
     public function post()

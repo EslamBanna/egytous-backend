@@ -34,15 +34,17 @@ class PostController extends Controller
                 'author_id' => $request->author_id,
                 'publish_at' => $request->publish_at
             ]);
-            if (count($request->tags) > 0) {
-                foreach ($request->tags as $tag) {
+            if ($request->tags != null) {
+                $tags = $request->tags;
+                $tags = explode(',', $tags);
+                foreach ($tags as $tag) {
                     PostTags::create([
                         'post_id' => $post->id,
                         'tag' => $tag
                     ]);
                 }
             }
-            if (count($request->images) > 0) {
+            if ($request->images && count($request->images) > 0) {
                 $post_image = '';
                 foreach ($request->images as $image) {
                     $post_image = $this->saveImage($image, 'posts');
@@ -61,7 +63,7 @@ class PostController extends Controller
         }
     }
 
-    public function getPost()
+    public function getPosts()
     {
         try {
             $posts = Post::with(
@@ -71,8 +73,46 @@ class PostController extends Controller
                 'Comments',
                 'Reacts:post_id,user_id,react',
                 'Author:id,name'
-            )->get();
+            )->where('publish_at', '<=', now())
+                ->orderBy('publish_at', 'desc')
+                ->get();
             return $this->returnData('posts', $posts);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function getPostImages($id)
+    {
+        try {
+            $check_if_post_exist_or_not = Post::find($id);
+            if (!$check_if_post_exist_or_not) {
+                return $this->returnError('E001', 'post not found');
+            }
+            $images = PostImages::where('post_id', $id)->get();
+            return $this->returnData('images', $images);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function getPost($id)
+    {
+        try {
+            $post = Post::with(
+                'user:id,name,image',
+                'Tags:id,post_id,tag',
+                'Images:id,post_id,image',
+                'Comments',
+                'Reacts:post_id,user_id,react',
+                'Author:id,name'
+            )
+                ->where('id', $id)
+                ->first();
+            if (!$post) {
+                return $this->returnError('E001', 'post not found');
+            }
+            return $this->returnData('post', $post);
         } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
         }

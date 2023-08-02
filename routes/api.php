@@ -32,7 +32,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/active-people', [UserController::class, 'activePeople']);
     ###############  posts ###############################
     Route::post('/add-post', [PostController::class, 'addPost']);
-    Route::get('/get-posts', [PostController::class, 'getPost']);
+    Route::get('/get-posts', [PostController::class, 'getPosts']);
+    Route::get('/get-post/{id}', [PostController::class, 'getPost']);
+    Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
 
     ######################################################
     Route::post('/add-story', [StoryController::class, 'addStory']);

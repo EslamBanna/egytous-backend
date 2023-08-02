@@ -13,7 +13,8 @@ class Post extends Model
         'description',
         'user_id',
         'author_id',
-        'publish_at'
+        'publish_at',
+        'privacy'
     ];
 
     public function Tags()

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId("user_id")->constrained("users")->onDelete("cascade");
             $table->integer("author_id")->nullable(true);
             $table->timestamp("publish_at")->nullable(true);
+            $table->enum("privacy", ["public", "private"])->default("public");
             $table->timestamps();
         });
     }
