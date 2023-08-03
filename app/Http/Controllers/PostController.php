@@ -86,7 +86,7 @@ class PostController extends Controller
     {
         try {
             $check_if_post_exist_or_not = Post::find($id);
-            if (!$check_if_post_exist_or_not) {
+            if (!$check_if_post_exist_or_not || $check_if_post_exist_or_not->publish_at > now()) {
                 return $this->returnError('E001', 'post not found');
             }
             $images = PostImages::where('post_id', $id)->get();
@@ -107,9 +107,8 @@ class PostController extends Controller
                 'Reacts:post_id,user_id,react',
                 'Author:id,name'
             )
-                ->where('id', $id)
-                ->first();
-            if (!$post) {
+                ->find($id);
+            if (!$post || $post->publish_at > now()) {
                 return $this->returnError('E001', 'post not found');
             }
             return $this->returnData('post', $post);

@@ -24,4 +24,8 @@ class PostComments extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function commentImages()
+    {
+        return $this->hasOne(CommentImage::class, 'comment_id');
+    }
 }

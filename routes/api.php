@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\UserController;
@@ -35,6 +36,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/get-posts', [PostController::class, 'getPosts']);
     Route::get('/get-post/{id}', [PostController::class, 'getPost']);
     Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
+    ######################################################
+    ################ comments ############################
+    Route::post('/add-comment', [CommentController::class, 'addComment']);
+    Route::get('/get-comments/{post_id}', [CommentController::class, 'getComments']);
+    Route::put('/update-comment/{comment_id}', [CommentController::class, 'updateComment']);
+    Route::delete('/delete-comment/{comment_id}', [CommentController::class, 'deleteComment']);
 
     ######################################################
     Route::post('/add-story', [StoryController::class, 'addStory']);
