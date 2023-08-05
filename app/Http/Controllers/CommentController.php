@@ -84,9 +84,10 @@ class CommentController extends Controller
             if($request->hasFile('image') && $request->image != null ){
                 // return $this->returnError('E001', 'you can not update image');
                 $image_name = $this->saveImage($request->image, 'comments');
-                $post_comment->commentImages()->update([
+                $post_comment->commentImages()->updateOrCreate([
                     'image' => $image_name
                 ]);
+                // return $image_name;
             }
             DB::commit();
             return $this->returnSuccessMessage('comment updated successfully');
