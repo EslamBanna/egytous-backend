@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PostComments;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CommentController extends Controller
@@ -58,39 +59,57 @@ class CommentController extends Controller
     public function updateComment(Request $request, $comment_id)
     {
         try {
+            DB::beginTransaction();
             $validator = Validator::make($request->all(), [
                 'comment' => 'required',
-                'comment_id' => 'exists:post_comments,id'
             ]);
             if ($validator->fails()) {
                 return $this->returnError('E001', $validator->errors()->first());
             }
             $post_comment = PostComments::find($comment_id);
+            if (!$post_comment) {
+                return $this->returnError('E001', 'comment not found');
+            }
             if ($post_comment->user_id != auth()->user()->id) {
                 return $this->returnError('E001', 'you can not update this comment');
             }
-            $post_comment->update([
-                'comment' => $request->comment
-            ]);
+            if($request->comment != '' || $request->comment != null){
+                $post_comment->update([
+                    'comment' => $request->comment
+                ]);
+            }
+            if($request->delete_old_image == true){
+                $post_comment->commentImages()->delete();
+            }
+            if($request->hasFile('image') && $request->image != null ){
+                // return $this->returnError('E001', 'you can not update image');
+                $image_name = $this->saveImage($request->image, 'comments');
+                $post_comment->commentImages()->update([
+                    'image' => $image_name
+                ]);
+            }
+            DB::commit();
             return $this->returnSuccessMessage('comment updated successfully');
         } catch (\Exception $e) {
+            DB::rollBack();
             return $this->returnError('E001', $e->getMessage());
         }
     }
 
-    public function deleteComment($comment_id){
-        try{
+    public function deleteComment($comment_id)
+    {
+        try {
             $post_comment = PostComments::find($comment_id);
-            if(!$post_comment){
+            if (!$post_comment) {
                 return $this->returnError('E001', 'comment not found');
             }
-            if($post_comment->user_id != auth()->user()->id){
+            if ($post_comment->user_id != auth()->user()->id) {
                 return $this->returnError('E001', 'you can not delete this comment');
             }
             $post_comment->delete();
             return $this->returnSuccessMessage('comment deleted successfully');
-        }catch(\Exception $e){
-            return $this->returnError('E001', $e->getMessage());   
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
         }
     }
 }

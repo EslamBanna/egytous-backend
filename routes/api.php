@@ -40,9 +40,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ################ comments ############################
     Route::post('/add-comment', [CommentController::class, 'addComment']);
     Route::get('/get-comments/{post_id}', [CommentController::class, 'getComments']);
-    Route::put('/update-comment/{comment_id}', [CommentController::class, 'updateComment']);
+    Route::post('/update-comment/{comment_id}', [CommentController::class, 'updateComment']);
     Route::delete('/delete-comment/{comment_id}', [CommentController::class, 'deleteComment']);
-
     ######################################################
     Route::post('/add-story', [StoryController::class, 'addStory']);
     Route::get('/get-stories', [StoryController::class, 'getStories']);
