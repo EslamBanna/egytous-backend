@@ -43,6 +43,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/update-comment/{comment_id}', [CommentController::class, 'updateComment']);
     Route::delete('/delete-comment/{comment_id}', [CommentController::class, 'deleteComment']);
     ######################################################
+    ################# save post ##########################
+    Route::post('/save-post', [PostController::class, 'savePost']);
+
+    ######################################################
     Route::post('/add-story', [StoryController::class, 'addStory']);
     Route::get('/get-stories', [StoryController::class, 'getStories']);
     Route::get('/logout', [AuthenticationController::class, 'logout']);

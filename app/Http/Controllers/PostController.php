@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\PostImages;
 use App\Models\PostTags;
+use App\Models\SavePost;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,10 +71,12 @@ class PostController extends Controller
                 'user:id,name,image',
                 'Tags:id,post_id,tag',
                 'Images:id,post_id,image',
-                'Comments',
+                // 'Comments',
                 'Reacts:post_id,user_id,react',
-                'Author:id,name'
-            )->where('publish_at', '<=', now())
+                'Author:id,name',
+                'ISavedPostBefore'
+            )
+            ->where('publish_at', '<=', now())
                 ->orderBy('publish_at', 'desc')
                 ->get();
             return $this->returnData('posts', $posts);
@@ -112,6 +115,30 @@ class PostController extends Controller
                 return $this->returnError('E001', 'post not found');
             }
             return $this->returnData('post', $post);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function savePost(Request $request){
+        try{
+            $validator = Validator::make($request->all(),[
+                'post_id' => 'required|exists:posts,id'
+            ]);
+            if($validator->fails()){
+                return $this->returnError('E001', $validator->errors()->first());
+            }
+            $check_if_post_saved_before_or_not = Post::find($request->post_id)->ISavedPostBefore;
+            if($check_if_post_saved_before_or_not == null){
+                SavePost::create([
+                    'user_id' => auth()->user()->id,
+                    'post_id' => $request->post_id
+                ]);
+            }else{
+                $check_if_post_saved_before_or_not->delete();
+            }
+            // return 'cccccc';
+            return $this->returnSuccessMessage('post saved successfully');
         } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
         }

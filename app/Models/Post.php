@@ -43,4 +43,14 @@ class Post extends Model
     {
         return $this->belongsTo(User::class, 'author_id');
     }
+
+    public function savedPost()
+    {
+        return $this->hasMany(SavePost::class);
+    }
+
+    public function ISavedPostBefore()
+    {
+        return $this->hasOne(SavePost::class) -> where('user_id', auth()->user()->id);
+    }
 }
