@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthenticationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\PostReactController;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -33,9 +34,11 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/active-people', [UserController::class, 'activePeople']);
     ###############  posts ###############################
     Route::post('/add-post', [PostController::class, 'addPost']);
+    Route::post('/share-post/{id}', [PostController::class, 'sharePost']);
     Route::get('/get-posts', [PostController::class, 'getPosts']);
     Route::get('/get-post/{id}', [PostController::class, 'getPost']);
     Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
+    Route::delete('/delete-post/{id}', [PostController::class, 'deletePost']);
     ######################################################
     ################ comments ############################
     Route::post('/add-comment', [CommentController::class, 'addComment']);
@@ -45,9 +48,13 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ######################################################
     ################# save post ##########################
     Route::post('/save-post', [PostController::class, 'savePost']);
-
+    Route::get('/get-saved-posts', [PostController::class, 'getSavedPosts']);
     ######################################################
     Route::post('/add-story', [StoryController::class, 'addStory']);
     Route::get('/get-stories', [StoryController::class, 'getStories']);
+    ######################################################
+    ################# React At post ######################
+    Route::post('/react-at-post/{post_id}', [PostReactController::class, 'reactAtPost']);
+    ######################################################
     Route::get('/logout', [AuthenticationController::class, 'logout']);
 });

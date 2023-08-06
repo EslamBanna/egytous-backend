@@ -63,7 +63,49 @@ class PostController extends Controller
             return $this->returnError('E001', $e->getMessage());
         }
     }
-
+    public function sharePost($post_id)
+    {
+        try {
+            DB::beginTransaction();
+            $check_the_post_exist = Post::find($post_id);
+            if (!$check_the_post_exist) {
+                return $this->returnError('E002', 'The Post Is Not Exist');
+            }
+          $shared_post =  Post::create([
+                'title' => $check_the_post_exist->title,
+                'description' => $check_the_post_exist->description,
+                'user_id' => auth()->user()->id,
+                'author_id' => $check_the_post_exist->user_id,
+                'publish_at' => now(),
+                'privacy'  => 'public'
+            ]);
+            $post_tags = $check_the_post_exist->Tags;
+            if ($post_tags != null) {
+                foreach ($post_tags as $tag) {
+                    PostTags::create([
+                        'post_id' => $shared_post->id,
+                        'tag' => $tag->tag
+                    ]);
+                }
+            }
+            $post_images = $check_the_post_exist->Images;
+            if ($post_images != null) {
+                $link_len = strlen((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/images/posts/');
+                foreach ($post_images as $image) {
+                $attach_name = substr($image->image, $link_len);
+                    PostImages::create([
+                        'post_id' => $shared_post->id,
+                        'image' => $attach_name
+                    ]);
+                }
+            }
+            DB::commit();
+            return $this->returnSuccessMessage('The Post Is Shared');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
     public function getPosts()
     {
         try {
@@ -71,12 +113,11 @@ class PostController extends Controller
                 'user:id,name,image',
                 'Tags:id,post_id,tag',
                 'Images:id,post_id,image',
-                // 'Comments',
                 'Reacts:post_id,user_id,react',
                 'Author:id,name',
                 'ISavedPostBefore'
             )
-            ->where('publish_at', '<=', now())
+                ->where('publish_at', '<=', now())
                 ->orderBy('publish_at', 'desc')
                 ->get();
             return $this->returnData('posts', $posts);
@@ -108,7 +149,8 @@ class PostController extends Controller
                 'Images:id,post_id,image',
                 'Comments',
                 'Reacts:post_id,user_id,react',
-                'Author:id,name'
+                'Author:id,name',
+                'ISavedPostBefore'
             )
                 ->find($id);
             if (!$post || $post->publish_at > now()) {
@@ -120,26 +162,64 @@ class PostController extends Controller
         }
     }
 
-    public function savePost(Request $request){
-        try{
-            $validator = Validator::make($request->all(),[
+    public function savePost(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
                 'post_id' => 'required|exists:posts,id'
             ]);
-            if($validator->fails()){
+            if ($validator->fails()) {
                 return $this->returnError('E001', $validator->errors()->first());
             }
             $check_if_post_saved_before_or_not = Post::find($request->post_id)->ISavedPostBefore;
-            if($check_if_post_saved_before_or_not == null){
+            if ($check_if_post_saved_before_or_not == null) {
                 SavePost::create([
                     'user_id' => auth()->user()->id,
                     'post_id' => $request->post_id
                 ]);
-            }else{
+            } else {
                 $check_if_post_saved_before_or_not->delete();
             }
-            // return 'cccccc';
             return $this->returnSuccessMessage('post saved successfully');
         } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+    public function getSavedPosts()
+    {
+        try {
+            $saved_posts = SavePost::with([
+                'post.user:id,name,image',
+                'post.Tags:id,post_id,tag',
+                'post.Images:id,post_id,image',
+                'post.Reacts',
+                'post.Author:id,name',
+            ])
+                ->where('user_id', auth()->user()->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            return $this->returnData('saved_posts', $saved_posts);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function deletePost($post_id)
+    {
+        try {
+            Db::beginTransaction();
+            $check_the_post_exist = Post::find($post_id);
+            if (!$check_the_post_exist) {
+                return $this->returnError('E002', 'The Post Is not Exist');
+            }
+            if ($check_the_post_exist->user_id != auth()->user()->id) {
+                return $this->returnError('E003', 'You Can not delete this post');
+            }
+            $check_the_post_exist->delete();
+            DB::commit();
+            return $this->returnSuccessMessage('The Post Deleted Successfully');
+        } catch (\Exception $e) {
+            Db::rollBack();
             return $this->returnError('E001', $e->getMessage());
         }
     }
