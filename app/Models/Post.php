@@ -38,6 +38,10 @@ class Post extends Model
     {
         return $this->hasMany(PostReacts::class);
     }
+    public function IReacted()
+    {
+        return $this->hasOne(PostReacts::class)->where('user_id', auth()->user()->id);
+    }
 
     public function Author()
     {

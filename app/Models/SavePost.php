@@ -22,4 +22,12 @@ class SavePost extends Model
     {
         return $this->belongsTo(Users::class);
     }
+    public function Reacts()
+    {
+        return $this->hasMany(PostReacts::class, 'post_id', 'post_id');
+    }
+    public function IReacted()
+    {
+        return $this->hasOne(PostReacts::class, 'post_id', 'post_id')->where('user_id', auth()->user()->id);
+    }
 }

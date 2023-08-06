@@ -71,7 +71,7 @@ class PostController extends Controller
             if (!$check_the_post_exist) {
                 return $this->returnError('E002', 'The Post Is Not Exist');
             }
-          $shared_post =  Post::create([
+            $shared_post =  Post::create([
                 'title' => $check_the_post_exist->title,
                 'description' => $check_the_post_exist->description,
                 'user_id' => auth()->user()->id,
@@ -92,7 +92,7 @@ class PostController extends Controller
             if ($post_images != null) {
                 $link_len = strlen((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . '/images/posts/');
                 foreach ($post_images as $image) {
-                $attach_name = substr($image->image, $link_len);
+                    $attach_name = substr($image->image, $link_len);
                     PostImages::create([
                         'post_id' => $shared_post->id,
                         'image' => $attach_name
@@ -113,10 +113,11 @@ class PostController extends Controller
                 'user:id,name,image',
                 'Tags:id,post_id,tag',
                 'Images:id,post_id,image',
-                'Reacts:post_id,user_id,react',
                 'Author:id,name',
-                'ISavedPostBefore'
+                'ISavedPostBefore',
             )
+                ->withCount('Reacts')
+                ->withCount('IReacted as i_reacted')
                 ->where('publish_at', '<=', now())
                 ->orderBy('publish_at', 'desc')
                 ->get();
@@ -152,6 +153,8 @@ class PostController extends Controller
                 'Author:id,name',
                 'ISavedPostBefore'
             )
+                ->withCount('Reacts')
+                ->withCount('IReacted as i_reacted')
                 ->find($id);
             if (!$post || $post->publish_at > now()) {
                 return $this->returnError('E001', 'post not found');
@@ -192,9 +195,11 @@ class PostController extends Controller
                 'post.user:id,name,image',
                 'post.Tags:id,post_id,tag',
                 'post.Images:id,post_id,image',
-                'post.Reacts',
+                // 'post.Reacts',
                 'post.Author:id,name',
             ])
+                ->withCount('Reacts')
+                ->withCount('IReacted as i_reacted')
                 ->where('user_id', auth()->user()->id)
                 ->orderBy('created_at', 'desc')
                 ->get();

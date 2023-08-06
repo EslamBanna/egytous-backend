@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\ChatRoomController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostReactController;
@@ -55,6 +56,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ######################################################
     ################# React At post ######################
     Route::post('/react-at-post/{post_id}', [PostReactController::class, 'reactAtPost']);
+    ######################################################
+    ################# chat ###############################
+    Route::post('/add-chat-room/{friend_id}', [ChatRoomController::class, 'addChatRoom']);
+    Route::get('/get-chat-rooms', [ChatRoomController::class, 'getChatRooms']);
+    Route::get('/get-chat-messages/{friend_id}', [ChatRoomController::class, 'getChatMessages']);
+    Route::post('/send-message/{friend_id}', [ChatRoomController::class, 'sendMessage']);
     ######################################################
     Route::get('/logout', [AuthenticationController::class, 'logout']);
 });
