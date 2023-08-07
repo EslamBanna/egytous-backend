@@ -16,7 +16,7 @@ class StoryController extends Controller
             $validate =  Validator::make($request->all(), [
                 'title' => 'string|max:100',
                 'description' => 'string',
-                'image' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'image' => 'image|mimes:jpeg,png,jpg,gif,svg',
             ]);
             if ($validate->fails()) {
                 return $this->returnError('E001', $validate->errors());
@@ -39,7 +39,9 @@ class StoryController extends Controller
 
     public function getStories(){
         try {
-            $stories = Story::with('user:id,name,image')->get();
+            $stories = Story::with('user:id,name,image')
+            ->orderBy('created_at', 'desc')
+            ->get();
             return $this->returnData('stories', $stories);
         } catch (\Exception $e) {
             return $this->returnError('E001', 'Sorry, Something went wrong');

@@ -51,6 +51,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/save-post', [PostController::class, 'savePost']);
     Route::get('/get-saved-posts', [PostController::class, 'getSavedPosts']);
     ######################################################
+    ################# story ##########################
     Route::post('/add-story', [StoryController::class, 'addStory']);
     Route::get('/get-stories', [StoryController::class, 'getStories']);
     ######################################################
