@@ -24,14 +24,17 @@ class ChatRoom extends Model
         return $this->belongsTo(User::class, 'friend_id');
     }
 
-    public function messages(){
+    public function messages()
+    {
         return $this->hasMany(Message::class);
     }
 
-    public function last_message(){
+    public function last_message()
+    {
         return $this->hasOne(Message::class)->latest();
     }
-    public function unread_messages(){
+    public function unread_messages()
+    {
         return $this->hasMany(Message::class)->where('seen', false);
     }
 }
