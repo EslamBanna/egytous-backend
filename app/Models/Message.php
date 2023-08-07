@@ -13,6 +13,7 @@ class Message extends Model
         'chat_room_id',
         'user_id',
         'message',
+        'seen'
     ];
 
     public function chat_room(){

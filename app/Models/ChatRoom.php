@@ -25,6 +25,13 @@ class ChatRoom extends Model
     }
 
     public function messages(){
-        return $this->hasMany(ChatMessage::class);
+        return $this->hasMany(Message::class);
+    }
+
+    public function last_message(){
+        return $this->hasOne(Message::class)->latest();
+    }
+    public function unread_messages(){
+        return $this->hasMany(Message::class)->where('seen', false);
     }
 }

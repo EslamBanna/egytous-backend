@@ -31,7 +31,17 @@ class ChatRoomController extends Controller
     public function getChatRooms()
     {
         try {
-            $chat_rooms = ChatRoom::where('user_id', auth()->user()->id)->get();
+            $chat_rooms = ChatRoom::where('user_id', auth()->user()->id)
+            ->orWhere('friend_id', auth()->user()->id)
+            ->with(['user' => function($q){
+                $q->select('id', 'name','image') ->where('id', '!=', auth()->user()->id);
+            }])
+            ->with(['friend' => function($q){
+                $q->select('id', 'name','image') ->where('id', '!=', auth()->user()->id);
+            }])
+            ->with('last_message:user_id,message,chat_room_id,created_at', 'last_message.user:id,name,image')
+            ->withCount('unread_messages')
+            ->get();
             return $this->returnData('chat_rooms', $chat_rooms);
         } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
