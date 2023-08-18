@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthenticationController;
+use App\Http\Controllers\BlockListController;
 use App\Http\Controllers\ChatRoomController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PostReactController;
 use App\Http\Controllers\StoryController;
+use App\Http\Controllers\StoryViewersController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +56,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ################# story ##########################
     Route::post('/add-story', [StoryController::class, 'addStory']);
     Route::get('/get-stories', [StoryController::class, 'getStories']);
+    Route::post('/show-story/{story_id}', [StoryViewersController::class, 'showStory']);
     ######################################################
     ################# React At post ######################
     Route::post('/react-at-post/{post_id}', [PostReactController::class, 'reactAtPost']);
@@ -64,5 +67,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/get-chat-messages/{friend_id}', [ChatRoomController::class, 'getChatMessages']);
     Route::post('/send-message/{friend_id}', [ChatRoomController::class, 'sendMessage']);
     ######################################################
+    ################# Block Lis ###############################
+    Route::post('/block-user/{friend_id}', [BlockListController::class, 'blockUser']);
+    ######################################################
     Route::get('/logout', [AuthenticationController::class, 'logout']);
+
 });

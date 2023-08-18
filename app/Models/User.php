@@ -54,4 +54,14 @@ class User extends Authenticatable
     {
         return ($value == null ? '' : $value);
     }
+
+    public function blocked_user()
+    {
+        return $this->hasMany(BlockList::class);
+    }
+
+    public function block_user()
+    {
+        return $this->hasMany(BlockList::class, 'blocked_user_id');
+    }
 }

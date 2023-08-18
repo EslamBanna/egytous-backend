@@ -109,6 +109,9 @@ class PostController extends Controller
     public function getPosts()
     {
         try {
+            $blocked_list = auth()->user()->blocked_user->pluck('blocked_user_id')->toArray();
+            $blocked_list_2 = auth()->user()->block_user->pluck('user_id')->toArray();
+            $blocked_list = array_merge($blocked_list, $blocked_list_2);
             $posts = Post::with(
                 'user:id,name,image',
                 'Tags:id,post_id,tag',
@@ -116,6 +119,7 @@ class PostController extends Controller
                 'Author:id,name',
                 'ISavedPostBefore',
             )
+                ->whereNotIn('user_id', $blocked_list)
                 ->withCount('Reacts')
                 ->withCount('IReacted as i_reacted')
                 ->where('publish_at', '<=', now())

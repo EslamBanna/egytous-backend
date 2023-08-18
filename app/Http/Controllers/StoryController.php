@@ -37,14 +37,18 @@ class StoryController extends Controller
         }
     }
 
-    public function getStories(){
+    public function getStories()
+    {
         try {
             $stories = Story::with('user:id,name,image')
-            ->orderBy('created_at', 'desc')
-            ->get();
+                ->orderBy('created_at', 'desc')
+                ->whereDoesntHave('viewers', function ($query) {
+                    $query->where('user_id', auth()->user()->id);
+                })
+                ->get();
             return $this->returnData('stories', $stories);
         } catch (\Exception $e) {
-            return $this->returnError('E001', 'Sorry, Something went wrong');
+            return $this->returnError('E001', $e->getMessage());
         }
     }
 }
