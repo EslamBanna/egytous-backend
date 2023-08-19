@@ -57,14 +57,4 @@ class Post extends Model
     {
         return $this->hasOne(SavePost::class) -> where('user_id', auth()->user()->id);
     }
-
-    public function blocked_user()
-    {
-        return $this->hasMany(BlockList::class, 'user_id', 'user_id');
-    }
-
-    public function block_user()
-    {
-        return $this->hasMany(BlockList::class, 'blocked_user_id', 'user_id');
-    }
 }

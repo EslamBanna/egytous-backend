@@ -41,6 +41,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/get-posts', [PostController::class, 'getPosts']);
     Route::get('/get-post/{id}', [PostController::class, 'getPost']);
     Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
+    Route::post('/update-post/{id}', [PostController::class, 'updatePost']);
     Route::delete('/delete-post/{id}', [PostController::class, 'deletePost']);
     ######################################################
     ################ comments ############################

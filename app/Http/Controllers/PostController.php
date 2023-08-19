@@ -213,6 +213,62 @@ class PostController extends Controller
         }
     }
 
+    public function updatePost(Request $request,$post_id)
+    {
+        try {
+            DB::beginTransaction();
+            $validtor = Validator::make($request->all(), [
+                'title' => 'string|required',
+                'description' => 'string',
+                'author_id' => 'string|required',
+                'publish_at' => 'date|required',
+            ]);
+            if ($validtor->fails()) {
+                return $this->returnError('E001', $validtor->errors()->first());
+            }
+            $check_if_post_exist_or_not = Post::find($post_id);
+            if (!$check_if_post_exist_or_not) {
+                return $this->returnError('E002', 'The Post Is not Exist');
+            }
+            if ($check_if_post_exist_or_not->user_id != auth()->user()->id) {
+                return $this->returnError('E003', 'You Can not update this post');
+            }
+            $check_if_post_exist_or_not->delete();
+            $post = Post::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'user_id' => auth()->user()->id,
+                'author_id' => $request->author_id,
+                'publish_at' => $request->publish_at
+            ]);
+            if ($request->tags != null) {
+                $tags = $request->tags;
+                $tags = explode(',', $tags);
+                foreach ($tags as $tag) {
+                    PostTags::create([
+                        'post_id' => $post->id,
+                        'tag' => $tag
+                    ]);
+                }
+            }
+            if ($request->images && count($request->images) > 0) {
+                $post_image = '';
+                foreach ($request->images as $image) {
+                    $post_image = $this->saveImage($image, 'posts');
+                    PostImages::create([
+                        'post_id' => $post->id,
+                        'image' => $post_image
+                    ]);
+                    $post_image = '';
+                }
+            }
+            DB::commit();
+            return $this->returnSuccessMessage('The Post Updated Successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
     public function deletePost($post_id)
     {
         try {
