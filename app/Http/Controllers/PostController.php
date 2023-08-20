@@ -220,7 +220,6 @@ class PostController extends Controller
             $validtor = Validator::make($request->all(), [
                 'title' => 'string|required',
                 'description' => 'string',
-                'author_id' => 'string|required',
                 'publish_at' => 'date|required',
             ]);
             if ($validtor->fails()) {
@@ -250,7 +249,7 @@ class PostController extends Controller
                     ]);
                 }
             }
-            if (count($request->removed_images) > 0) {
+            if (isset($request->removed_images) && count($request->removed_images) > 0) {
                 foreach ($request->removed_images as $image_id) {
                     $check_the_image = PostImages::find($image_id);
                     if (!$check_the_image) {
