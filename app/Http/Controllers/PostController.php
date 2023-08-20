@@ -213,7 +213,7 @@ class PostController extends Controller
         }
     }
 
-    public function updatePost(Request $request,$post_id)
+    public function updatePost(Request $request, $post_id)
     {
         try {
             DB::beginTransaction();
@@ -233,22 +233,33 @@ class PostController extends Controller
             if ($check_if_post_exist_or_not->user_id != auth()->user()->id) {
                 return $this->returnError('E003', 'You Can not update this post');
             }
-            $check_if_post_exist_or_not->delete();
-            $post = Post::create([
+            // $check_if_post_exist_or_not->delete();
+            $check_if_post_exist_or_not->update([
                 'title' => $request->title,
                 'description' => $request->description,
-                'user_id' => auth()->user()->id,
-                'author_id' => $request->author_id,
                 'publish_at' => $request->publish_at
             ]);
+            PostTags::where('post_id', $post_id)->delete();
             if ($request->tags != null) {
                 $tags = $request->tags;
                 $tags = explode(',', $tags);
                 foreach ($tags as $tag) {
                     PostTags::create([
-                        'post_id' => $post->id,
+                        'post_id' => $check_if_post_exist_or_not->id,
                         'tag' => $tag
                     ]);
+                }
+            }
+            if (count($request->removed_images) > 0) {
+                foreach ($request->removed_images as $image_id) {
+                    $check_the_image = PostImages::find($image_id);
+                    if (!$check_the_image) {
+                        return $this->returnError('E002', 'The Image Is not Exist');
+                    }
+                    if ($check_the_image->post_id != $post_id) {
+                        return $this->returnError('E003', 'You Can not delete this image');
+                    }
+                    $check_the_image->delete();
                 }
             }
             if ($request->images && count($request->images) > 0) {
@@ -256,7 +267,7 @@ class PostController extends Controller
                 foreach ($request->images as $image) {
                     $post_image = $this->saveImage($image, 'posts');
                     PostImages::create([
-                        'post_id' => $post->id,
+                        'post_id' => $check_if_post_exist_or_not->id,
                         'image' => $post_image
                     ]);
                     $post_image = '';
