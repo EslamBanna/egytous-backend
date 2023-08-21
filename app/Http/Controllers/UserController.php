@@ -10,7 +10,7 @@ class UserController extends Controller
     use GeneralTrait;
     public function activePeople(){
         try{
-            $users = User::select('id', 'name', 'image')->take(5)->get();
+            $users = User::select('id', 'name', 'image')->take(3)->get();
             return $this->returnData('users', $users);
         }catch(\Exception $e){
             return $this->returnError('E001', 'Sorry, Something went wrong');

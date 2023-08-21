@@ -39,7 +39,9 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/add-post', [PostController::class, 'addPost']);
     Route::post('/share-post/{id}', [PostController::class, 'sharePost']);
     Route::get('/get-posts', [PostController::class, 'getPosts']);
+    Route::get('/get-posts-by-tag/{tag}', [PostController::class, 'getPostsByTag']);
     Route::get('/get-post/{id}', [PostController::class, 'getPost']);
+    Route::get('/get-user-posts/{user_id}', [PostController::class, 'getUserPosts']);
     Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
     Route::post('/update-post/{id}', [PostController::class, 'updatePost']);
     Route::delete('/delete-post/{id}', [PostController::class, 'deletePost']);

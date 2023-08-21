@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlockList;
 use App\Models\Post;
 use App\Models\PostImages;
 use App\Models\PostTags;
 use App\Models\SavePost;
+use App\Models\User;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -131,6 +133,34 @@ class PostController extends Controller
         }
     }
 
+    public function getPostsByTag($tag)
+    {
+        try {
+            $blocked_list = auth()->user()->blocked_user->pluck('blocked_user_id')->toArray();
+            $blocked_list_2 = auth()->user()->block_user->pluck('user_id')->toArray();
+            $blocked_list = array_merge($blocked_list, $blocked_list_2);
+            $posts = Post::with(
+                'user:id,name,image',
+                'Tags:id,post_id,tag',
+                'Images:id,post_id,image',
+                'Author:id,name',
+                'ISavedPostBefore',
+            )
+                ->whereHas('Tags', function ($q) use ($tag) {
+                    $q->where('tag', $tag);
+                })
+                ->whereNotIn('user_id', $blocked_list)
+                ->withCount('Reacts')
+                ->withCount('IReacted as i_reacted')
+                ->where('publish_at', '<=', now())
+                ->orderBy('publish_at', 'desc')
+                ->get();
+            return $this->returnData('posts', $posts);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
     public function getPostImages($id)
     {
         try {
@@ -179,15 +209,16 @@ class PostController extends Controller
                 return $this->returnError('E001', $validator->errors()->first());
             }
             $check_if_post_saved_before_or_not = Post::find($request->post_id)->ISavedPostBefore;
+            $post = '';
             if ($check_if_post_saved_before_or_not == null) {
-                SavePost::create([
+                $post = SavePost::create([
                     'user_id' => auth()->user()->id,
                     'post_id' => $request->post_id
                 ]);
             } else {
                 $check_if_post_saved_before_or_not->delete();
             }
-            return $this->returnSuccessMessage('post saved successfully');
+            return $this->returnData('post', $post);
         } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
         }
@@ -195,19 +226,72 @@ class PostController extends Controller
     public function getSavedPosts()
     {
         try {
+            $blocked_list = auth()->user()->blocked_user->pluck('blocked_user_id')->toArray();
+            $blocked_list_2 = auth()->user()->block_user->pluck('user_id')->toArray();
+            $blocked_list = array_merge($blocked_list, $blocked_list_2);
             $saved_posts = SavePost::with([
                 'post.user:id,name,image',
                 'post.Tags:id,post_id,tag',
                 'post.Images:id,post_id,image',
-                // 'post.Reacts',
                 'post.Author:id,name',
+                'post.ISavedPostBefore'
             ])
-                ->withCount('Reacts')
-                ->withCount('IReacted as i_reacted')
+                ->with(['post' => function ($q) {
+                    $q->withCount('Reacts')
+                        ->withCount('IReacted as i_reacted');
+                }])
                 ->where('user_id', auth()->user()->id)
                 ->orderBy('created_at', 'desc')
+                // ->whereNotIn('user_id', $blocked_list)
                 ->get();
+
             return $this->returnData('saved_posts', $saved_posts);
+        } catch (\Exception $e) {
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function getUserPosts($user_id)
+    {
+        try {
+            $user = User::find($user_id);
+            if (!$user) {
+                return $this->returnError('E001', 'user not found');
+            }
+            $check_if_user_blocked = BlockList::where(
+                [
+                    ['user_id', auth()->user()->id],
+                    ['blocked_user_id', $user_id]
+                ]
+            )
+                ->orWhere([
+                    ['user_id', $user_id],
+                    ['blocked_user_id', auth()->user()->id]
+                ])
+                ->first();
+            if ($check_if_user_blocked) {
+                return $this->returnError('E001', 'you can not see this user posts');
+            }
+            $posts = Post::with(
+                'user:id,name,image',
+                'Tags:id,post_id,tag',
+                'Images:id,post_id,image',
+                'Author:id,name',
+                'ISavedPostBefore'
+            )
+                ->withCount('Reacts')
+                ->withCount('IReacted as i_reacted')
+                ->where('user_id', $user_id)
+                ->orderBy('publish_at', 'desc')
+                ->get();
+            $user_posts_images = Post::where('user_id', $user_id)->withCount('Images')->get();
+            $total_images = $user_posts_images->sum('images_count');
+            $data = [
+                'user' => $user,
+                'posts' => $posts,
+                'user_posts_images' => $total_images
+            ];
+            return $this->returnData('posts', $data);
         } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
         }
