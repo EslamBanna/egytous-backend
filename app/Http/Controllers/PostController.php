@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlockList;
+use App\Models\ChatRoom;
 use App\Models\Post;
 use App\Models\PostImages;
 use App\Models\PostTags;
@@ -286,10 +287,16 @@ class PostController extends Controller
                 ->get();
             $user_posts_images = Post::where('user_id', $user_id)->withCount('Images')->get();
             $total_images = $user_posts_images->sum('images_count');
+            $chat_room = ChatRoom::where([
+                ['friend_id' , $user_id], ['user_id' , auth()->user()->id]
+            ])
+                ->orWhere([['user_id' , $user_id], ['friend_id' , auth()->user()->id]])
+                ->pluck('id')->first();
             $data = [
                 'user' => $user,
                 'posts' => $posts,
-                'user_posts_images' => $total_images
+                'user_posts_images' => $total_images,
+                'chat_room' => $chat_room
             ];
             return $this->returnData('posts', $data);
         } catch (\Exception $e) {
@@ -379,6 +386,17 @@ class PostController extends Controller
             return $this->returnSuccessMessage('The Post Deleted Successfully');
         } catch (\Exception $e) {
             Db::rollBack();
+            return $this->returnError('E001', $e->getMessage());
+        }
+    }
+
+    public function getUserImages($userId)
+    {
+        try {
+            $user_posts_images = Post::where('user_id', $userId)->pluck('id');
+            $images = PostImages::whereIn('post_id', $user_posts_images)->get();
+            return $this->returnData('images', $images);
+        } catch (\Exception $e) {
             return $this->returnError('E001', $e->getMessage());
         }
     }

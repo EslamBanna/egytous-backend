@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SendMessgaeEvent;
 use App\Models\ChatRoom;
+use App\Models\Message;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,12 +53,14 @@ class ChatRoomController extends Controller
         }
     }
 
-    public function getChatMessages($friend_id)
+    public function getChatMessages($chat_room_id)
     {
         try {
             DB::beginTransaction();
-            $chat_room = ChatRoom::where('user_id', auth()->user()->id)
-                ->where('friend_id', $friend_id)->first();
+            // $chat_room = ChatRoom::where([['friend_id', $friend_id], ['user_id', auth()->user()->id]])
+            // ->orWhere([['user_id', $friend_id], ['friend_id', auth()->user()->id]])
+            // ->first();
+            $chat_room = ChatRoom::find($chat_room_id);
             if (!$chat_room) {
                 return $this->returnError('E001', 'you dont have a chat room with this user');
             }
@@ -65,6 +69,14 @@ class ChatRoomController extends Controller
                 $message->seen = true;
                 $message->save();
             });
+            $messages = Message::where('chat_room_id', $chat_room_id)
+            ->with('user:id,name,image')
+            ->get();
+            // $data = [
+            //     'user' => auth()->user(),
+            //     'friend' => $chat_room->friend,
+            //     'messages' => $messages
+            // ];
             DB::commit();
             return $this->returnData('messages', $messages);
         } catch (\Exception $e) {
@@ -73,17 +85,21 @@ class ChatRoomController extends Controller
         }
     }
 
-    public function sendMessage(Request $request, $friend_id)
+    public function sendMessage(Request $request, $chat_room_id)
     {
         try {
             DB::beginTransaction();
-            $chat_room = ChatRoom::where('user_id', auth()->user()->id)
-                ->where('friend_id', $friend_id)->first();
+            // $chat_room = ChatRoom::where([['friend_id', $friend_id], ['user_id', auth()->user()->id]])
+            //     ->orWhere([['user_id', $friend_id], ['friend_id', auth()->user()->id]])
+            //     ->first();
+
+            $chat_room = ChatRoom::find($chat_room_id);
+
             if (!$chat_room) {
-                return $this->returnError('E001', 'you dont have a chat room with this user');
-            }
-            if ($chat_room->user_id != auth()->user()->id  || $chat_room->friend_id != $friend_id) {
-                return $this->returnError('E001', 'you dont have a chat room with this user');
+               $chat_room = ChatRoom::create([
+                    'user_id' => auth()->user()->id,
+                    'friend_id' => $request->friend_id
+                ]);
             }
             if (!$request->message) {
                 return $this->returnError('E001', 'message is required');
@@ -93,6 +109,8 @@ class ChatRoomController extends Controller
                 'message' => $request->message
             ]);
             $chat_room->updated_at = now();
+            event(new SendMessgaeEvent($request->message));
+            // event(new SendMessgaeEvent('hello world'));
             DB::commit();
             return $this->returnSuccessMessage('message sent successfully');
         } catch (\Exception $e) {

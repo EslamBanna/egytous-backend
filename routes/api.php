@@ -45,6 +45,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/get-post-images/{id}', [PostController::class, 'getPostImages']);
     Route::post('/update-post/{id}', [PostController::class, 'updatePost']);
     Route::delete('/delete-post/{id}', [PostController::class, 'deletePost']);
+    Route::get('/get-user-images/{userId}', [PostController::class, 'getUserImages']);
     ######################################################
     ################ comments ############################
     Route::post('/add-comment', [CommentController::class, 'addComment']);
@@ -67,8 +68,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     ################# chat ###############################
     Route::post('/add-chat-room/{friend_id}', [ChatRoomController::class, 'addChatRoom']);
     Route::get('/get-chat-rooms', [ChatRoomController::class, 'getChatRooms']);
-    Route::get('/get-chat-messages/{friend_id}', [ChatRoomController::class, 'getChatMessages']);
-    Route::post('/send-message/{friend_id}', [ChatRoomController::class, 'sendMessage']);
+    Route::get('/get-chat-messages/{chat_room_id}', [ChatRoomController::class, 'getChatMessages']);
+    Route::post('/send-message/{chat_room_id}', [ChatRoomController::class, 'sendMessage']);
     ######################################################
     ################# Block Lis ###############################
     Route::post('/block-user/{friend_id}', [BlockListController::class, 'blockUser']);
