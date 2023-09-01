@@ -20,9 +20,11 @@ class SendMessgaeEvent implements ShouldBroadcast
      * @return void
      */
     public $message;
-    public function __construct($message)
+    public $user;
+    public function __construct($message, $user)
     {
         $this->message = $message;
+        $this->user = $user;
     }
 
     /**
@@ -32,7 +34,7 @@ class SendMessgaeEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return ['messages-channel'];
+        return ['messages-channel' . $this->message['chat_room_id']];
     }
 
     public function broadcastAs()

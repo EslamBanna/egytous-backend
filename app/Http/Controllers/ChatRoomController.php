@@ -70,8 +70,8 @@ class ChatRoomController extends Controller
                 $message->save();
             });
             $messages = Message::where('chat_room_id', $chat_room_id)
-            ->with('user:id,name,image')
-            ->get();
+                ->with('user:id,name,image')
+                ->get();
             // $data = [
             //     'user' => auth()->user(),
             //     'friend' => $chat_room->friend,
@@ -96,7 +96,7 @@ class ChatRoomController extends Controller
             $chat_room = ChatRoom::find($chat_room_id);
 
             if (!$chat_room) {
-               $chat_room = ChatRoom::create([
+                $chat_room = ChatRoom::create([
                     'user_id' => auth()->user()->id,
                     'friend_id' => $request->friend_id
                 ]);
@@ -104,14 +104,14 @@ class ChatRoomController extends Controller
             if (!$request->message) {
                 return $this->returnError('E001', 'message is required');
             }
-            $chat_room->messages()->create([
+            $message = Message::create([
+                'chat_room_id' => $chat_room->id,
                 'user_id' => auth()->user()->id,
                 'message' => $request->message
             ]);
             $chat_room->updated_at = now();
-            event(new SendMessgaeEvent($request->message));
-            // event(new SendMessgaeEvent('hello world'));
             DB::commit();
+            event(new SendMessgaeEvent($message, auth()->user()));
             return $this->returnSuccessMessage('message sent successfully');
         } catch (\Exception $e) {
             DB::rollBack();
